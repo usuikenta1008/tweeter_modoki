@@ -1,11 +1,4 @@
-from flask import Flask
-
-app = Flask(__name__)
-
-
-@app.route('/')
-def index():
-    return 'Website is working'
+from source_code import app
 
 if __name__ == '__main__':
     app.run()
