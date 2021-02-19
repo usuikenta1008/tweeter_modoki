@@ -29,14 +29,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-3">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Login</a>
+                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Register</a>
+                        <a class="nav-link" href="{{ url_for('register') }}">Register</a>
                     </li>
                 </ul>
             </div>
         </nav>
-        {% block body %}{% endblock %}
+        <div class="container">
+            {% block body %}{% endblock %}
+        </div>
     </body>
 </html>

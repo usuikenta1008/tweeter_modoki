@@ -22,7 +22,7 @@ services:
     restart: always
     image: mysql:latest
     command: --default-authentication-plugin=mysql_native_password
-    container_name: pytweet_database
+    container_name: docker_mysql
     ports: 
      - 3306:3306
     volumes:
