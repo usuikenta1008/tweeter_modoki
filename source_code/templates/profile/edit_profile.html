@@ -1,0 +1,22 @@
+{% extends "base_profile.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+<title>Edit Profile Page - {{ user.username }}</title>
+{% endblock %}
+
+{% block body %}
+{# we would like to edit first-name, last-name, and bio #}
+<div class="container">
+    <form class="form-group" method="POST" action="{{ url_for('edit_profile') }}">
+        <h2>Edit User</h2>
+        {{ form.hidden_tag() }}
+        {{ wtf.form_field(form.username)}}
+        {{ wtf.form_field(form.firstname)}}
+        {{ wtf.form_field(form.lastname)}}
+        {{ wtf.form_field(form.bio)}}
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Save</button>
+    </form>
+</div>
+
+{% endblock %}

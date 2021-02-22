@@ -11,8 +11,8 @@
     <hr class="my-4">
     <p>Powered bt Python Flask</p>
     <p class="lead">
-        <a href="/" class="btn btn-primary btn-lg" role="button">Login</a>
-        <a href="/" class="btn btn-primary btn-lg" role="button">Register</a>
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg" role="button">Login</a>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg" role="button">Register</a>
     </p>
 </div>
 {% endblock %}

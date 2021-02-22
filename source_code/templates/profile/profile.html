@@ -1,0 +1,30 @@
+{% extends "base_profile.html" %}
+
+{% block title %}
+<title>Profile Page - {{ user.username }}</title>
+{% endblock %}
+
+{% block body %}
+<h3 class="display-5" style="text-align: right;">
+    Edit Profile <a href="{{ url_for('edit_profile') }}"><img src="/static/img/button.png" alt="button" style="width: 40px;"></a>
+</h3>
+<hr class="my-4">
+<img src="/static/img/sample_avatar.png" class="img-fuild rounded mx-auto d-block">
+<h1 class="display-3">{{ user.firstname }} {{ user.lastname }}</h1>
+<h1 class="display-3">@{{ user.username }}</h1>
+<hr class="my-4">
+<p>{{ user.bio }}</p>
+<hr class="my-4">
+<div class="container">
+    <form action="{{ url_for('profile') }}" class="form-group" method="POST"></form>
+    <h3 class="display-3">Post PyTweet:</h3>
+    {{ form.hidden_tag() }}
+    {{ wtf.form_field(form.tweet) }}
+    <button class="btn btn-lg btn-primary" type="submit">Post</button>
+</div>
+<hr class="my-4">
+<div class="container">
+    {# for tweet in tweets #}
+    {# endfor #}
+</div>
+{% endblock %}

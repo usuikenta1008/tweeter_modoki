@@ -1,8 +1,20 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
 {% block title %}
 <title>Pytweet - Login</title>
 {% endblock %}
 
 {% block body %}
+{# We would like to Login using username and password #}
+<div class="container">
+    <form action="{{ url_for('login')}}" class="form-auth" method='POST'>
+        <h2 class="form-auth-heading">Login</h2>
+        {{ form.hidden_tag() }}
+        {{ wtf.form_field(form.username) }}
+        {{ wtf.form_field(form.password) }}
+        {{ wtf.form_field(form.remember) }}
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign Up</button>
+    </form>
+</div>
 {% endblock %}
