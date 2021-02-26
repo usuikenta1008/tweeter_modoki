@@ -5,3 +5,7 @@
 .delete-button:hover{
     border: solid 1px blue;
 }
+
+.main body{
+    color:rgb(65, 169, 218);
+}

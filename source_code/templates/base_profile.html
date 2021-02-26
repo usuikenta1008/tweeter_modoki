@@ -21,7 +21,7 @@
 
     </head>
 
-    <body>
+    <body class="body">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a class="navbar-brand" href="/">PyTweet</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle Navigation">
@@ -38,7 +38,7 @@
                 </ul>
             </div>
         </nav>
-        <div class="container">
+        <div class="container main-body">
             <div class="container" style="min-height:100%; width:80%;">
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
