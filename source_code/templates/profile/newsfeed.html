@@ -1,0 +1,54 @@
+{% extends "base_profile.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+<title>News Feed</title>
+{% endblock %}
+
+{% block body %}
+    <hr class="my-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2">
+                <img src="/static/img/sample_avatar.png" class="img-fluid rounded mx-auto d-block">
+            </div>
+            <div class="col-sm-10">
+                <span>
+                <h3 class="display-4">{{ user.firstname }} {{ user.lastname }}</h3>
+                <h4 class="display-4">@{{ user.username }}</h4>
+                </span>
+            </div>
+        </div>
+    </div>
+    <hr class="my-4">
+    <div class="container">
+        <form action="{{ url_for('newsfeed') }}" class="form-group" method="POST">
+            <h3 class="display-3">Post PyTweet:</h3>
+            {{ form.hidden_tag() }}
+            {{ wtf.form_field(form.tweet) }}
+            <button class="btn btn-lg btn-primary" type="submit">Post</button>
+        </form>
+    </div>
+    <hr class="my-3">
+    <hr class="my-3">
+    <div class="container">
+        {% for tweet, username in tweet_group %}
+        <div id="tweet-{{ tweet.tweet_id }}" class="container" style="border:solid 1px rgb(98, 110, 124); background-color: rgb(184, 184, 107); box-shadow: 0 0 10px rgba(56, 64, 98, 0.6); border-radius: 20px; margin-top: 10px;">
+            {% if username == user.username %}
+            <a href="{{ url_for('delete_tweet_from_newsfeed', tweet_id=tweet.tweet_id) }}">
+                <img class="delete-button" src="/static/img/delete_button.png" alt="gominbako" style="float: right; width: 20px; margin-top: 5px;">
+            </a>
+            {% endif %}
+            <h3 class="display-5" style="margin-top: 10px"></h3><a href="{{ url_for('view_other_profile', username=username) }}">@{{ username }}</a></h3>
+            <p style="font-size: 20px;">{{ tweet.tweet }}</p>
+            <hr class="my-4">
+            <p><strong>Post On:</strong>{{ tweet.datetime_created }}</p>
+        </div>
+        {% endfor %}
+        {% if look_tweet_id %}
+            <script>
+                document.getElementById('{{ look_tweet_id }}').scrollIntoView();
+            </script>
+        {% endif %}
+    </div>
+{% endblock %}

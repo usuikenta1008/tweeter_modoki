@@ -54,7 +54,7 @@ def loader_user(user_id):
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        pass
+        return redirect(url_for('newsfeed'))
     else:
         return render_template('index.html')
 
@@ -136,6 +136,44 @@ def profile(look_tweet_id=None):
         tweet_id = f'tweet-{tweet.tweet_id}'
         return redirect(url_for('profile', look_tweet_id=tweet_id))
 
+
+# News Feed
+@app.route('/newsfeed', methods=['GET', 'POST'])
+@login_required
+def newsfeed():
+    form = TweetForm()
+    if request.method == 'GET':
+        tweets = PyTweet.query.filter_by(from_user_id=current_user.id).all() #list of tweets
+        following_json = current_user.following
+        if following_json is not None and following_json != "":
+            following = json.loads(following_json)
+            for following_id in following:
+                tweets = tweets + PyTweet.query.filter_by(from_user_id=following_id).all()
+
+        tweets = sorted(tweets, key=lambda x: x.tweet_id)
+
+        usernames = []
+        for tweet in tweets:
+            user = User.query.get(tweet.from_user_id)
+            username = user.username
+            usernames.append(username)
+        tweet_group = list(zip(tweets, usernames))
+        tweet_group = tweet_group[::-1]
+        return render_template('profile/newsfeed.html', user=current_user, form=form, tweet_group=tweet_group)
+
+    if request.method == 'POST':
+        tweet_content = form.tweet.data
+        from_user_id = current_user.id
+        datetime_now = datetime.datetime.now()
+        # convert to format: MM-DD-YYYY hh:mm:ss AM/PM ("02-22-2021 12:22:50 PM")
+        datetime_now_string = datetime_now.strftime('%m-%d-%Y %H:%M:%S %p')
+        tweet = PyTweet(from_user_id=from_user_id, tweet=tweet_content, datetime_created=datetime_now_string)
+        db.session.add(tweet)
+        db.session.commit()
+        tweet_id = f'tweet-{tweet.tweet_id}'
+        return redirect(url_for('newsfeed'))
+
+
 # edit te profile of the user
 @app.route('/profile/me/edit', methods=['GET', 'POST'])
 @login_required
@@ -160,12 +198,24 @@ def edit_profile():
 
 @app.route('/profile/me/delete_tweet/<int:tweet_id>')
 @login_required
-def delete_tweet(tweet_id):
+def delete_tweet(tweet_id, to_newsfeed=False):
     tweet = PyTweet.query.get(tweet_id)
     db.session.delete(tweet)
     db.session.commit()
     flash('Successfully Deleted Tweet')
-    return redirect(url_for('profile'))
+    if to_newsfeed:
+        return redirect(url_for('newsfeed'))
+    else:
+        return redirect(url_for('profile'))
+
+@app.route('/newsfeed/delete/<int:tweet_id>')
+@login_required
+def delete_tweet_from_newsfeed(tweet_id):
+    tweet = PyTweet.query.get(tweet_id)
+    db.session.delete(tweet)
+    db.session.commit()
+    flash('Successfully Deleted Tweet')
+    return redirect(url_for('newsfeed'))
 
 # create a page to view others' profile
 @app.route('/users/view/<string:username>')
