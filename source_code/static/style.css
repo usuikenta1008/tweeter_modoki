@@ -1,0 +1,7 @@
+*{
+    color:rgb(187, 62, 62);
+}
+
+.delete-button:hover{
+    border: solid 1px blue;
+}

@@ -1,5 +1,6 @@
 #  import standard library
-
+import datetime
+import json
 #  import the third-party library
 from werkzeug import generate_password_hash, check_password_hash
 from flask import render_template, request, url_for, redirect, flash
@@ -38,6 +39,10 @@ class EditUserForm(FlaskForm):
     lastname = StringField('lastname', validators=[InputRequired(), Length(min=1, max=50)])
     bio = TextAreaField('bio', validators=[InputRequired(), Length(min=1, max=500)])
 
+
+class TweetForm(FlaskForm):
+    tweet = TextAreaField('What\'s on your mind', validators=[InputRequired(), Length(min=1, max=300)])
+
 # user_leader (for login manager)
 @login_manager.user_loader
 def loader_user(user_id):
@@ -48,7 +53,10 @@ def loader_user(user_id):
 # make sure your landing page has all the neccesary links for the user to abke to navigate easily
 @app.route('/')
 def index():
-    return render_template('index.html')
+    if current_user.is_authenticated:
+        pass
+    else:
+        return render_template('index.html')
 
 
 #  login for
@@ -67,7 +75,7 @@ def login():
                 flash('Invalid Username or Password')
             return render_template('login.html', form=form)
             
-# register to 
+# register to save to the database
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
@@ -81,6 +89,18 @@ def register():
         flash('Successfully registered user')
         return redirect(url_for('index'))
 
+
+# Public access profile page
+@app.route('/users/<string:username>')
+def public_profile(username):
+    if current_user.is_authenticated:
+        return redirect('view_other_profile', username=username)
+    else:
+        user = User.quary.filter_by(username=username).first()
+        user_id = user.id
+        user_bio = user.bio
+        return render_template('public_profile.html', username=username, user_bio=user_bio)
+
 # welcome user after logging in
 @app.route('/welcome/me')
 @login_required # add login required so that not everyone can access this page!
@@ -89,10 +109,32 @@ def welcome():
     return render_template('profile/welcome.html', user=current_user)
 
 # profile of the user
-@app.route('/profile/me')
+# private
+@app.route('/profile/me', methods=['GET', 'POST'])
 @login_required
-def profile():
-    return render_template('profile/profile.html', user=current_user) 
+def profile(look_tweet_id=None):
+    form = TweetForm()
+    if request.method == 'GET':
+        tweets = PyTweet.query.filter_by(from_user_id=current_user.id).all() #list of tweets
+        usernames = []
+        for tweet in tweets:
+            user = User.query.get(tweet.from_user_id)
+            username = user.username
+            usernames.append(username)
+        tweet_group = list(zip(tweets, usernames))
+        tweet_group = tweet_group[::-1]
+        return render_template('profile/profile.html', user=current_user, form=form, tweets=tweets, tweet_group=tweet_group, look_tweet_id=look_tweet_id)
+    if request.method == 'POST':
+        tweet_content = form.tweet.data
+        from_user_id = current_user.id
+        datetime_now = datetime.datetime.now()
+        # convert to format: MM-DD-YYYY hh:mm:ss AM/PM ("02-22-2021 12:22:50 PM")
+        datetime_now_string = datetime_now.strftime('%m-%d-%Y %H:%M:%S %p')
+        tweet = PyTweet(from_user_id=from_user_id, tweet=tweet_content, datetime_created=datetime_now_string)
+        db.session.add(tweet)
+        db.session.commit()
+        tweet_id = f'tweet-{tweet.tweet_id}'
+        return redirect(url_for('profile', look_tweet_id=tweet_id))
 
 # edit te profile of the user
 @app.route('/profile/me/edit', methods=['GET', 'POST'])
@@ -115,6 +157,107 @@ def edit_profile():
         flash('Successfully Edited User!')
         return redirect(url_for('profile'))
 
+
+@app.route('/profile/me/delete_tweet/<int:tweet_id>')
+@login_required
+def delete_tweet(tweet_id):
+    tweet = PyTweet.query.get(tweet_id)
+    db.session.delete(tweet)
+    db.session.commit()
+    flash('Successfully Deleted Tweet')
+    return redirect(url_for('profile'))
+
+# create a page to view others' profile
+@app.route('/users/view/<string:username>')
+@login_required
+def view_other_profile(username):
+    user = User.query.filter_by(username=username).first()
+    followed = False
+    own = False
+
+    tweets = PyTweet.query.filter_by(from_user_id=user.id).all() #list of tweets
+    usernames = []
+    for tweet in tweets:
+        user = User.query.get(tweet.from_user_id)
+        username = user.username
+        usernames.append(username)
+    tweet_group = list(zip(tweets, usernames))
+    tweet_group = tweet_group[::-1]
+    
+    if user.id == current_user.id:
+        own = True
+    else:
+        if user.followers is None or user.followers == "":
+            pass
+        else:
+            followers = json.loads(user.followers)
+            if current_user.id in followers:
+                followed = True
+
+    return render_template('profile/other_profile.html', user=user, own_profile=own, tweet_group=tweet_group, followed=followed)
+
+# follow this user
+@app.route('/follow/<string:username>')
+@login_required
+def follow_user(username):
+    # if you're viewing your own profile, then do nothing
+    if username == current_user.username:
+        return redirect(url_for('view_other_profile', username=username))
+    else:
+        user = User.query.get(current_user.id)
+        followings_json = user.following
+        followed_user = User.query.filter_by(username=username).first()
+        followed_user_followers_json = followed_user.followers
+
+        if followings_json is None or followings_json == "":
+            following = [followed_user.id]
+        else:
+            following = json.loads(followings_json)
+            if followed_user.id not in following:
+                following.append(followed_user.id)
+        
+        if followed_user_followers_json is None or followed_user_followers_json == "":
+            followed_user_followers = [current_user.id]
+        else:
+            followed_user_followers = json.loads(followed_user_followers_json)
+            if current_user.id not in followed_user_followers:
+                followed_user_followers.append(current_user.id)
+
+        user.following = json.dumps(following)
+        followed_user.followers = json.dumps(followed_user_followers)
+
+        db.session.add(user)
+        db.session.add(followed_user)
+        db.session.commit()
+        flash('Successfully followed User')
+        return redirect(url_for('view_other_profile', username=username))
+
+# unfollow this user
+@app.route('/unfollow/<string:username>')
+@login_required
+def unfollow_user(username):
+    my_following = json.loads(current_user.following)
+
+    followed_user = User.query.filter_by(username=username).first()
+    followed_user_followers = json.loads(followed_user.followers)
+
+    #  remove from my following
+    if followed_user.id in my_following:
+        my_following.remove(followed_user.id)
+
+    # remove from following user's followers
+    if current_user.id in followed_user_followers:
+        followed_user_followers.remove(current_user.id)
+
+    user = User.query.get(current_user.id)
+    user.following = json.dumps(my_following)
+    followed_user.followers = json.dumps(followed_user_followers)
+
+    db.session.add(user)
+    db.session.add(followed_user)
+    db.session.commit()
+    flash('Successfully Unfollowed User!')
+    return redirect(url_for('view_other_profile', username=username))
 
 ######### ERROR HANDLING PAGE ##########
 @app.errorhandler(404)

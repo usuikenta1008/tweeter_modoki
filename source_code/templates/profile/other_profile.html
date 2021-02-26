@@ -1,0 +1,34 @@
+{% extends "base_profile.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+<title>Profile Page - {{ user.username }}</title>
+{% endblock %}
+
+{% block body %}
+<hr class="my-4">
+<img src="/static/img/sample_avatar.png" class="img-fuild rounded mx-auto d-block">
+<h1 class="display-3">{{ user.firstname }}{{ user.lastname }}</h1>
+<h1 class="display-3">@{{ user.username }}</h1>
+{% if not own_profile %}
+    {% if not followed %}
+        <h1 class="display-5"><a href="{{ url_for('follow_user', username=user.username) }}">+Follow</a></h1>
+        {% else %}
+        <h1 class="display-5"><a href="{{ url_for('unfollow_user', username=user.username) }}">-Unfollowed</a></h1>
+    {% endif %}
+{% endif %}
+<hr class="my-4">
+<p>{{ user.bio }}</p>
+<hr class="my-4">
+<div class="container">
+    {% if own_profile or followed %}
+        {% for tweet, username in tweet_group %}
+        <div id="tweet-{{ tweet.tweet_id }}" class="container" style="border:solid 1px rgb(98, 110, 124); background-color: rgb(184, 184, 107); box-shadow: 0 0 10px rgba(56, 64, 98, 0.6); border-radius: 20px; margin-top: 10px;">
+            <h3 class="display-5" style="margin-top: 10px"></h3>@{{ username }}</h3>
+            <p style="font-size: 20px;">{{ tweet.tweet }}</p>
+            <hr class="my-4">
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

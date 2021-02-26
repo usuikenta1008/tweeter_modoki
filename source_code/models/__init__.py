@@ -1,3 +1,6 @@
-from .models import User 
+from .models import User, PyTweet
 
-__all__ = ['User']
+
+__all__ = [
+    'User', "PyTweet"
+]

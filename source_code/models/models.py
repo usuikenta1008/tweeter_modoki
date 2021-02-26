@@ -12,6 +12,8 @@ class User(UserMixin, db.Model):
     firstname = db.Column(db.String(55))
     lastname = db.Column(db.String(55))
     bio = db.Column(db.String(510))
+    followers = db.Column(db.Text())
+    following = db.Column(db.Text())
 
     # def __init__(self, username, email, password):
     #     self.username = username
@@ -27,7 +29,7 @@ class PyTweet(db.Model):
 
     tweet_id = db.Column(db.Integer, primary_key=True, unique=True)
     from_user_id = db.Column(db.Integer)
-    tweet = db.Column(db.String(300))
+    tweet = db.Column(db.String(310))
     datetime_created = db.Column(db.String(50))  # format: MM-DD-YYYY hh:mm:ss AM/PM
 
     def __repr__(self):

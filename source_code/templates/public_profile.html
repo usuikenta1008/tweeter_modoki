@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Profile Page - {{ usrname }}</title>
+{% endblock %}
+
+{% block body %}
+    <hr class="my-4">
+    <img src="/static/img/sample_avator.png" alt="img" class="img-fluid rounded mx-auto d-block">
+    <h1 class="display-4">@{{ username }}</h1>
+    <hr class="my-4">
+    <p>{{ user_bio }}</p>
+{% endblock %}
